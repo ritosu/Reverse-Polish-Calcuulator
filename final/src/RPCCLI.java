@@ -12,18 +12,20 @@ public class RPCCLI {
 //        (new RPCCLI()).mainLoop();
 //    }
     
-    public void calstart(String input) {
-    	callcal(input);
+    public String calstart(String input) {
+    	String value = callcal(input);
+    	return value;
     }
-    private void callcal(String input) {
+    private String callcal(String input) {
         ReversePolishCalclator rpc = new ReversePolishCalclator();
 	    if (input == null || input.equals("!"))
-	        return;
-	    String value = rpc.calc(input.split("\\s+"));
+	        return null;
+	    String value = rpc.calc(input.split("_"));
 	    if (value != null)
 	        System.out.println(Double.parseDouble(value));
 	    else
 	        System.out.println("Error");
+	    return value;
     }
  
     /**

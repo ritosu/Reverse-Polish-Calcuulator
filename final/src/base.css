@@ -1,0 +1,16 @@
+.result{
+    -fx-text-alignment: right;
+    color: #ff0000;
+    -fx-wrap-text: true;
+}
+.formula {
+    color: #00ff00;
+    -fx-wrap-text: true;
+    text-align: right;
+}
+.rootBP{
+    color: #0000ff;
+}
+.GP{
+    -fx-alignment: top-right;
+}

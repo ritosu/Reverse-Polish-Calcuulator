@@ -1,37 +1,68 @@
+
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.NodeOrientation;
 import javafx.scene.Scene;
+import javafx.scene.text.Text;
+import javafx.scene.text.Font;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.TilePane;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
 
 public class GUI extends Application {
 	private TextArea formulaField;
+	private TextArea result;
 	private TextArea stack;
-	private Button runButton;
 
-	private void action() {
+	private void setresult() {
 		String str = formulaField.getText();
-		stack.setText(str);
+		String value = (new RPCCLI()).calstart(str);
+		result.setText(value);
+		System.out.println(result.getWidth()+" "+stack.getWidth());
+	}
+	private void clickope(String ope) {
+		String formula = formulaField.getText();
+		if(formula.charAt(formula.length()-1) != '_')
+			formula+= '_'+ope+'_';
+		else
+			formula+= ope+'_';
+		formulaField.setText(formula);
 	}
 	public void start(Stage stage) {
-		int buttonsize = 50;
-		int centersizeH = 500;
-		int centersizeW = 280;
-		int numsbuttonsizeH = 300;
-		int numsbuttonsizeW = 250;
-		int stackfieldsizeW = 120;
 		formulaField = new TextArea();
-		formulaField.setPrefSize(centersizeW, centersizeH-numsbuttonsizeH-10);
+		formulaField.setFont(Font.loadFont("file:resources/fonts/Arial-Bold.ttf", 24));
+		formulaField.getStyleClass().add("formula");
+		formulaField.setWrapText(true);
+		formulaField.setPrefHeight(200);
+		result = new TextArea();
+		result.setFont(Font.loadFont("file:resources/fonts/Arial-Bold.ttf", 30));
+		result.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+		result.setWrapText(true);
+		result.setEditable(false);
+		result.getStyleClass().add("result");
+		result.setMaxHeight(200);
 		stack = new TextArea();
-		stack.setPrefSize(stackfieldsizeW, centersizeH);
+		stack.setPrefSize(100, 460);
 		stack.setEditable(false);
-		runButton = new Button("Run");
-		runButton.setOnAction(e -> action());
+		/*火曜にすること
+		 * テキストエリア自動拡縮
+		 * スタックUI作成
+		 * 右完成させる。
+		 * ずっと左寄せ
+		 * ボタン自動リサイズ
+		 * 水曜
+		 * スタック完成
+		 * 
+		 */
 		
 		Button[] numbutton = new Button[10];
 		Button[] opebutton = new Button[10];//.,␣,＝,＋,−,×,÷,^,a,←
@@ -43,33 +74,37 @@ public class GUI extends Application {
 		opebutton[5] = new Button("*");
 		opebutton[6] = new Button("/");
 		opebutton[7] = new Button("^");
-		opebutton[8] = new Button("a");
+		opebutton[8] = new Button("ac");
 		opebutton[9] = new Button("←");
 		for(int i = 0; i < 10; ++i) {
-			opebutton[i].setPrefSize(buttonsize, buttonsize);
+			opebutton[i].setMaxWidth(Double.MAX_VALUE);
+			opebutton[i].setMaxHeight(Double.MAX_VALUE);
 			String buttonText = opebutton[i].getText();
-			opebutton[i].setOnAction(event -> formulaField.appendText(buttonText));
+			opebutton[i].setOnAction(event -> clickope(buttonText));
 		}
-		opebutton[1].setOnAction(event -> formulaField.appendText(" "));//␣
-		opebutton[2].setOnAction(event -> (new RPCCLI()).calstart(formulaField.getText()));//=
+		opebutton[1].setOnAction(event -> formulaField.appendText("_"));	//␣
+		opebutton[2].setOnAction(event -> setresult()); 					//=
+		opebutton[8].setOnAction(event -> formulaField.clear());
 		opebutton[9].setOnAction(event -> formulaField.deletePreviousChar());//←
 		for(int i = 0; i < 10; ++i) {
 			numbutton[i] = new Button(String.valueOf(i));
-			numbutton[i].setPrefSize(buttonsize, buttonsize);
+			numbutton[i].setMaxWidth(Double.MAX_VALUE);
+			numbutton[i].setMaxHeight(Double.MAX_VALUE);
 			String buttonText = numbutton[i].getText();
 			numbutton[i].setOnAction(event -> formulaField.appendText(buttonText));
 		}
 		//Pane作成
 		BorderPane rootBP = new BorderPane();
 		BorderPane centerBP = new BorderPane();
-		centerBP.setPrefSize(centersizeW, centersizeH);
-		
-		//数字ボタンをGridPaneで作成した場合
 		GridPane numsGP = new GridPane();
-		numsGP.setHgap(10);
-		numsGP.setVgap(10);
-		numsGP.setPadding(new Insets(10, 10, 10, 10));
-		//numsGPに数字ボタンをセット
+		VBox textVB = new VBox();
+		
+		textVB.setPrefSize(400, 250);
+		numsGP.setPrefSize(300, 200);
+		numsGP.setHgap(6);
+		numsGP.setVgap(6);
+		numsGP.setPadding(new Insets(8, 8, 8, 8));
+		//numsGPにボタンをセット
 		for(int i = 0; i < 4; ++i) {
 			for(int j = 0; j < 3; ++j) {
 				if(i == 0) {
@@ -79,32 +114,36 @@ public class GUI extends Application {
 				numsGP.add(numbutton[(i-1)*3+j+1], j, 4-i);
 			}
 		}
-		//numsGPに演算子ボタンをセット
 		for(int i = 0; i < 2; ++i)numsGP.add(opebutton[i], i+1, 4);
 		for(int i = 0; i < 5; ++i)numsGP.add(opebutton[i+2], 3, 4-i);
 		for(int i = 0; i < 3; ++i)numsGP.add(opebutton[9-i], i, 0);
-		
-		
-//		//数字ボタンをFlowPaneで作成した
-//		FlowPane numsFP = new FlowPane();
-//		numsFP.setPadding(new Insets(5, 5, 5, 5));
-//		numsFP.setVgap(10);
-//		numsFP.setHgap(10);
-//		numsFP.setPrefWrapLength(170);
-//		numsFP.setStyle("-fx-background-color: DAE6F3;");
-//		for(int i = 0; i < 10; ++i)
-//			numsFP.getChildren().add(numbutton[i]);
-		
-		centerBP.setTop(runButton);
-		centerBP.setCenter(formulaField);
-		centerBP.setBottom(numsGP);
+		ColumnConstraints[] ColCon = new ColumnConstraints[4];
+		RowConstraints[] RowCon = new RowConstraints[5];
+		for(int i = 0; i < 4; ++i)ColCon[i] = new ColumnConstraints();
+		for(int i = 0; i < 4; ++i)ColCon[i].setPercentWidth(25);
+		for(int i = 0; i < 5; ++i)RowCon[i] = new RowConstraints();
+		for(int i = 0; i < 5; ++i)RowCon[i].setPercentHeight(20);
+		numsGP.getColumnConstraints().addAll(ColCon);
+		numsGP.getRowConstraints().addAll(RowCon);
+		//Pane配置
+//		centerBP.setTop(formulaField);
+//		centerBP.setCenter(result);
+		textVB.getChildren().add(formulaField);
+		textVB.getChildren().add(result);
+//		centerBP.setCenter(textVB);
+//		centerBP.setBottom(numsGP);
+		centerBP.setTop(textVB);
+		centerBP.setCenter(numsGP);
 		rootBP.setCenter(centerBP);
-		rootBP.setLeft(stack);
+		rootBP.setRight(stack);
 		
 		//シーン作成
 		Scene scene = new Scene(rootBP);
+		scene.getStylesheets().add("base.css");
 		stage.setScene(scene);
-		stage.setTitle("テストアプリ");
+		stage.setTitle("電卓");
+		stage.setMinWidth(300);
+		stage.setMinHeight(460);
 		stage.show();
 	}
 	public static void main(String[] args) {

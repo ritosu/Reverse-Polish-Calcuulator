@@ -32,7 +32,12 @@ public class ReversePolishCalclator {
             else if(str[i].equals("/")) {
                 if(popnum(num, stack) == -1)return null;
                 stack.push(String.valueOf(num[1]/num[0]));
-            }else {
+            }
+            else if(str[i].equals("^")) {
+            	if(popnum(num, stack) == -1)return null;
+            	stack.push(String.valueOf(Math.pow(num[1], num[0])));
+            }
+            else {
                 return null;
             }
         }
