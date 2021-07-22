@@ -20,7 +20,7 @@ public class RPCCLI {
         ReversePolishCalclator rpc = new ReversePolishCalclator();
 	    if (input == null || input.equals("!"))
 	        return null;
-	    String value = rpc.calc(input.split("_"));
+	    String value = rpc.calc(input.split("[_ ]"));
 	    if (value != null)
 	        System.out.println(Double.parseDouble(value));
 	    else

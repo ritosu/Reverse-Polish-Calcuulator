@@ -1,35 +1,42 @@
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
 import javafx.scene.Scene;
-import javafx.scene.text.Text;
 import javafx.scene.text.Font;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
+import java.util.List;
 
 public class GUI extends Application {
 	private TextArea formulaField;
-	private TextArea result;
+	private TextField result;
 	private TextArea stack;
-
-	private void setresult() {
+	private DrawGraphics drawGraphics;
+	Pane graphP = new Pane();
+	//イコール（＝）が押されたとき、計算・表示する
+	private void setResult() {
 		String str = formulaField.getText();
 		String value = (new RPCCLI()).calstart(str);
 		result.setText(value);
 		System.out.println(result.getWidth()+" "+stack.getWidth());
+		//グラフ表示
+		drawGraphics.getGroup().getChildren().clear();
+		drawGraphics.drawAnim(str);
 	}
-	private void clickope(String ope) {
+	//演算子が押されたときの処理
+	private void clickOperator(String ope) {
 		String formula = formulaField.getText();
 		if(formula.charAt(formula.length()-1) != '_')
 			formula+= '_'+ope+'_';
@@ -37,33 +44,25 @@ public class GUI extends Application {
 			formula+= ope+'_';
 		formulaField.setText(formula);
 	}
+
 	public void start(Stage stage) {
 		formulaField = new TextArea();
-		formulaField.setFont(Font.loadFont("file:resources/fonts/Arial-Bold.ttf", 24));
+//		formulaField.setFont(Font.loadFont("file:resources/fonts/Arial-Bold.ttf", 24));
+		formulaField.setFont(new Font("Arial Rounded MT Bold", 24));
 		formulaField.getStyleClass().add("formula");
 		formulaField.setWrapText(true);
 		formulaField.setPrefHeight(200);
-		result = new TextArea();
-		result.setFont(Font.loadFont("file:resources/fonts/Arial-Bold.ttf", 30));
+		result = new TextField();
+		result.setFont(new Font("Arial Rounded MT Bold", 30));
 		result.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
-		result.setWrapText(true);
 		result.setEditable(false);
 		result.getStyleClass().add("result");
 		result.setMaxHeight(200);
 		stack = new TextArea();
 		stack.setPrefSize(100, 460);
 		stack.setEditable(false);
-		/*火曜にすること
-		 * テキストエリア自動拡縮
-		 * スタックUI作成
-		 * 右完成させる。
-		 * ずっと左寄せ
-		 * ボタン自動リサイズ
-		 * 水曜
-		 * スタック完成
-		 * 
-		 */
-		
+		drawGraphics =  new DrawGraphics();
+		Background bg = new Background(new BackgroundFill(Color.ALICEBLUE, null, null));
 		Button[] numbutton = new Button[10];
 		Button[] opebutton = new Button[10];//.,␣,＝,＋,−,×,÷,^,a,←
 		opebutton[0] = new Button(".");
@@ -80,10 +79,10 @@ public class GUI extends Application {
 			opebutton[i].setMaxWidth(Double.MAX_VALUE);
 			opebutton[i].setMaxHeight(Double.MAX_VALUE);
 			String buttonText = opebutton[i].getText();
-			opebutton[i].setOnAction(event -> clickope(buttonText));
+			opebutton[i].setOnAction(event -> clickOperator(buttonText));
 		}
 		opebutton[1].setOnAction(event -> formulaField.appendText("_"));	//␣
-		opebutton[2].setOnAction(event -> setresult()); 					//=
+		opebutton[2].setOnAction(event -> setResult()); 					//=
 		opebutton[8].setOnAction(event -> formulaField.clear());
 		opebutton[9].setOnAction(event -> formulaField.deletePreviousChar());//←
 		for(int i = 0; i < 10; ++i) {
@@ -98,7 +97,10 @@ public class GUI extends Application {
 		BorderPane centerBP = new BorderPane();
 		GridPane numsGP = new GridPane();
 		VBox textVB = new VBox();
+//		Pane graphP = new Pane();
 		
+		graphP.setMinWidth(100);
+		graphP.setBackground(bg);
 		textVB.setPrefSize(400, 250);
 		numsGP.setPrefSize(300, 200);
 		numsGP.setHgap(6);
@@ -126,20 +128,18 @@ public class GUI extends Application {
 		numsGP.getColumnConstraints().addAll(ColCon);
 		numsGP.getRowConstraints().addAll(RowCon);
 		//Pane配置
-//		centerBP.setTop(formulaField);
-//		centerBP.setCenter(result);
 		textVB.getChildren().add(formulaField);
 		textVB.getChildren().add(result);
-//		centerBP.setCenter(textVB);
-//		centerBP.setBottom(numsGP);
 		centerBP.setTop(textVB);
 		centerBP.setCenter(numsGP);
+		graphP.getChildren().add(drawGraphics.getGroup());
+		graphP.setRotate(180.0);
 		rootBP.setCenter(centerBP);
-		rootBP.setRight(stack);
+		rootBP.setRight(graphP);
+		
 		
 		//シーン作成
 		Scene scene = new Scene(rootBP);
-		scene.getStylesheets().add("base.css");
 		stage.setScene(scene);
 		stage.setTitle("電卓");
 		stage.setMinWidth(300);
